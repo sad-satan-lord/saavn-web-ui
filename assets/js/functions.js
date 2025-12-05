@@ -40,7 +40,12 @@ function AddDownload(id) {
     var MP3DL = DOWNLOAD_API+"/add?id="+id;
     // make api call, if 200, add to download list
     fetch(MP3DL)
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.status == "success") {
             // add to download list
@@ -128,4 +133,10 @@ function AddDownload(id) {
                             return;
                   }}
               });}, 3000); // end interval
-        } });}
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("Download failed: The download server is currently unavailable. Please check the API configuration.");
+    });
+}
