@@ -1,131 +1,151 @@
+// Global variables
+const DOWNLOAD_API = "https://openmp3compiler.astudy.org";
+
+// Modal Popup Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const mpopup = document.getElementById('mpopupBox');
+    const mpLink = document.getElementById("mpopupLink");
+    const close = document.getElementsByClassName("close")[0];
+
+    if (mpLink) {
+        mpLink.onclick = function() {
+            mpopup.style.display = "block";
+        };
+    }
+
+    if (close) {
+        close.onclick = function() {
+            mpopup.style.display = "none";
+        };
+    }
+
+    window.onclick = function(event) {
+        if (event.target == mpopup) {
+            mpopup.style.display = "none";
+        }
+    };
+});
+
 function PlayAudio(audio_url, song_id) {
+    const audio = document.getElementById('player');
+    const source = document.getElementById('audioSource');
+    source.src = audio_url;
     
-  var audio = document.getElementById('player');
-  var source = document.getElementById('audioSource');
-  source.src = audio_url;
-  var name = document.getElementById(song_id+"-n").textContent;
-  var album = document.getElementById(song_id+"-a").textContent;
-  var image = document.getElementById(song_id+"-i").getAttribute("src");
+    // In the new logic, we might need a better way to get these if ids are removed.
+    // However, for now, we'll keep the ID logic but ensure elements exist.
+    const nameEl = document.getElementById(song_id + "-n");
+    const albumEl = document.getElementById(song_id + "-a");
+    const imageEl = document.getElementById(song_id + "-i");
     
-document.title = name+" - "+album;
-var bitrate = document.getElementById('saavn-bitrate');
-var bitrate_i = bitrate.options[bitrate.selectedIndex].value;
-var quality = "";
-if (bitrate_i == 4) {quality = 320} else {quality = 160;}
+    if (!nameEl || !albumEl || !imageEl) {
+        console.error("Song elements not found for ID:", song_id);
+        return;
+    }
 
+    const name = nameEl.textContent;
+    const album = albumEl.textContent;
+    const image = imageEl.getAttribute("src");
 
-    document.getElementById("player-name").innerHTML = name;
-        document.getElementById("player-album").innerHTML = album;
-document.getElementById("player-image").setAttribute("src",image);
+    document.title = name + " - " + album;
+    
+    const bitrate = document.getElementById('saavn-bitrate');
+    // Not using bitrate value for quality variable as it was unused in original code
+    // var bitrate_i = bitrate.options[bitrate.selectedIndex].value;
 
-var promise = audio.load();
-if (promise) {
-    //Older browsers may not return a promise, according to the MDN website
-    promise.catch(function(error) { console.error(error); });
-}//call this to just preload the audio without playing
-  audio.play(); //call this to play the song right away
-};
-function searchSong(search_term) {
-    
-document.getElementById('search-box').value=search_term;
-var goButton = document.getElementById("search-trigger");
-            goButton.click();
-    
+    document.getElementById("player-name").textContent = name;
+    document.getElementById("player-album").textContent = album;
+    document.getElementById("player-image").setAttribute("src", image);
+
+    const promise = audio.load();
+    if (promise) {
+        promise.catch(error => console.error(error));
+    }
+    audio.play();
 }
-var DOWNLOAD_API = "https://openmp3compiler.astudy.org"
+
 function AddDownload(id) {
-    var bitrate = document.getElementById('saavn-bitrate');
-    var bitrate_i = bitrate.options[bitrate.selectedIndex].value;
-    // MP3 server API
-    var MP3DL = DOWNLOAD_API+"/add?id="+id;
-    // make api call, if 200, add to download list
+    const MP3DL = `${DOWNLOAD_API}/add?id=${id}`;
+
     fetch(MP3DL)
-    .then(response => response.json())
-    .then(data => {
-        if (data.status == "success") {
-            // add to download list
-            var download_list = document.getElementById("download-list");
-            var download_item = document.createElement("li");
-           /*
-           <li>
-                    <div class="col">
-                        
-                        <img src="https://i.pinimg.com/originals/ed/54/d2/ed54d2fa700d36d4f2671e1be84651df.jpg" width="50px">
-                        <div style="display: inline;">
-                        <span id="download-name">Song</span>
-                        <span id="download-album">Album</span>
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status == "success") {
+                const download_list = document.getElementById("download-list");
+                const download_item = document.createElement("li");
+
+                download_item.innerHTML = `
+                <div class="col">
+                    <img class="track-img" src="${data.image}" width="50px">
+                    <div style="display: inline;">
+                        <span class="track-name">${id}</span> -
+                        <span class="track-album">${data.album}</span>
                         <br>
-                        <span id="download-size">Size</span>
-                        <span id="download-status" style="color:green">Compiling.</span>
-                        </div>
+                        <span class="track-size">Size : Null</span>
+                        <span class="track-status" style="color:green"></span>
                     </div>
-                    <hr>
-                    </li>
-           */
-            // download_item.innerHTML = '<div class="col"><img src="'+data.image+'" width="50px"><div style="display: inline;"><span id="download-name">'+id+'</span><span id="download-album">'+data.album+'</span><br><span id="download-size">'+data.size+'</span><span id="download-status" style="color:green">Compiling.</span></div></div><hr>';
-            download_item.innerHTML = `
-            <div class="col">
-            <img class="track-img" src="${data.image}" width="50px">
-            <div style="display: inline;">
-              <span class="track-name"> ${id}</span> - 
-              <span class="track-album"> ${data.album}</span>
-              <br>
-              <span class="track-size"> Size : Null</span>
-              <span class="track-status" style="color:green"> </span>
-            </div>
-          </div>
-          <hr>
-            `;
+                </div>
+                <hr>
+                `;
 
-            // set download_item track_tag to song id
-            download_item.setAttribute("track_tag",id);
-            
-            // set css class no-bullets
-            download_item.className = "no-bullets";
+                download_item.setAttribute("track_tag", id);
+                download_item.className = "no-bullets";
+                download_list.appendChild(download_item);
 
-            download_list.appendChild(download_item);
-            // every 5 seconds, check download status
-            var STATUS_URL = DOWNLOAD_API+"/status?id="+id;
-            // get download_status_span by track_tag and class
-            var download_status_span = document.querySelector('[track_tag="'+id+'"] .track-status');
-            var download_name = document.querySelector('[track_tag="'+id+'"] .track-name');
-            var download_album = document.querySelector('[track_tag="'+id+'"] .track-album');
-            var download_img = document.querySelector('[track_tag="'+id+'"] .track-img');
-            var download_size = document.querySelector('[track_tag="'+id+'"] .track-size');
-            // set text content to song name and album name
-            
-            download_name.innerHTML= results_objects[id].track.name;
-            download_status_span.innerHTML = data.status;
-            download_album.innerHTML = results_objects[id].track.album.name;
-            download_img.setAttribute("src",results_objects[id].track.image[2].link);
-            
-            // change mpopupLink background and border color to green and back to blue after 1 second
-            var float_tap = document.getElementById('mpopupLink');
-            float_tap.style.backgroundColor = "green";
-            float_tap.style.borderColor = "green";
+                const STATUS_URL = `${DOWNLOAD_API}/status?id=${id}`;
+                const download_status_span = document.querySelector(`[track_tag="${id}"] .track-status`);
+                const download_name = document.querySelector(`[track_tag="${id}"] .track-name`);
+                const download_album = document.querySelector(`[track_tag="${id}"] .track-album`);
+                const download_img = document.querySelector(`[track_tag="${id}"] .track-img`);
+                const download_size = document.querySelector(`[track_tag="${id}"] .track-size`);
 
-            setTimeout(function() {
-                float_tap.style.backgroundColor = "#007bff";
-                float_tap.style.borderColor = "#007bff";
-            }, 1000);
-            
-            // check status every 5 seconds
-            var interval = setInterval(function() {
-                fetch(STATUS_URL)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status) {
-                        // update status
-                        download_status_span.textContent = data.status;
-                        if(data.size) {
-                            download_size.textContent = "Size: "+data.size;
-                        }
-                        if (data.status == "Done") {
-                            // download complete, add download button
-                            download_status_span.innerHTML = `<a href="${DOWNLOAD_API}${data.url}" target="_blank">Download MP3</a>`;
-                            // clear interval
+                // Access global results_objects safely
+                if (typeof results_objects !== 'undefined' && results_objects[id]) {
+                    download_name.textContent = results_objects[id].track.name;
+                    download_album.textContent = results_objects[id].track.album.name;
+                    download_img.setAttribute("src", results_objects[id].track.image[2].link);
+                }
+
+                download_status_span.textContent = data.status;
+
+                const float_tap = document.getElementById('mpopupLink');
+                if (float_tap) {
+                    float_tap.style.backgroundColor = "green";
+                    float_tap.style.borderColor = "green";
+                    setTimeout(() => {
+                        float_tap.style.backgroundColor = "transparent";
+                        float_tap.style.borderColor = "transparent";
+                    }, 1000);
+                }
+
+                const interval = setInterval(() => {
+                    fetch(STATUS_URL)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status) {
+                                download_status_span.textContent = data.status;
+                                if (data.size) {
+                                    download_size.textContent = "Size: " + data.size;
+                                }
+                                if (data.status == "Done") {
+                                    download_status_span.innerHTML = `<a href="${DOWNLOAD_API}${data.url}" target="_blank">Download MP3</a>`;
+                                    clearInterval(interval);
+                                }
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Status check failed", err);
                             clearInterval(interval);
-                            return;
-                  }}
-              });}, 3000); // end interval
-        } });}
+                        });
+                }, 3000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Download failed: The download server is currently unavailable. Please check the API configuration.");
+        });
+}
