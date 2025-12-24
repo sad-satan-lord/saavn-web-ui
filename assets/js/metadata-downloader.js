@@ -4,67 +4,36 @@ async function DownloadWithMetadata(btnElement, url, song_id) {
     btnElement.disabled = true;
 
     try {
-        // Extract metadata safely inside try block
-        if (!results_objects[song_id] || !results_objects[song_id].track) {
-            throw new Error("Track data not found");
-        }
-        const track = results_objects[song_id].track;
-        const song_name = track.name;
-        const artist_name = track.primaryArtists;
-        const album_name = track.album.name;
-        // Use high quality image if available, fall back to what's available
-        const cover_url = (track.image && track.image.length > 2) ? track.image[2].link :
-                          (track.image && track.image.length > 0) ? track.image[0].link : "";
-
         // Fetch song data
         const songResponse = await fetch(url);
         if (!songResponse.ok) throw new Error('Network response was not ok');
         const songBuffer = await songResponse.arrayBuffer();
 
-        // Fetch cover image
-        let coverBuffer = null;
-        if (cover_url) {
-            try {
-                const coverResponse = await fetch(cover_url);
-                if (coverResponse.ok) {
-                    coverBuffer = await coverResponse.arrayBuffer();
-                }
-            } catch (e) {
-                console.warn("Failed to fetch cover image", e);
-            }
+        // Create blob
+        const songBlob = new Blob([songBuffer], { type: 'audio/mp4' });
+        const songUrl = URL.createObjectURL(songBlob);
+
+        // Get filename
+        let filename = "song.m4a";
+        if (results_objects[song_id] && results_objects[song_id].track) {
+            const track = results_objects[song_id].track;
+            // Sanitize filename
+            const name = track.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            filename = `${name}.m4a`;
         }
-
-        // Add metadata
-        const writer = new ID3Writer(songBuffer);
-        writer.setFrame('TIT2', song_name)
-              .setFrame('TPE1', [artist_name])
-              .setFrame('TALB', album_name);
-
-        if (coverBuffer) {
-            writer.setFrame('APIC', {
-                  type: 3,
-                  data: coverBuffer,
-                  description: 'Cover',
-                  useUnicodeEncoding: false
-              });
-        }
-        writer.addTag();
-
-        const taggedSongBuffer = writer.getBlob();
-        const taggedSongUrl = URL.createObjectURL(taggedSongBuffer);
 
         // Trigger download
         const a = document.createElement('a');
-        a.href = taggedSongUrl;
-        a.download = `${song_name}.mp3`;
+        a.href = songUrl;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(taggedSongUrl);
+        URL.revokeObjectURL(songUrl);
 
     } catch (error) {
-        console.error('Download with metadata failed:', error);
-        alert('Download with metadata failed. Starting direct download...');
+        console.error('Download failed:', error);
+        alert('Download failed. Opening direct link...');
         window.open(url);
     } finally {
         if (btnElement) {
