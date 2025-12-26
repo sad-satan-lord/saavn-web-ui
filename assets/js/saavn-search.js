@@ -1,5 +1,6 @@
 var results_container = document.querySelector("#saavn-results")
 var results_objects = {};
+var lastSearch = "";
 const searchUrl = "https://jiosaavn-api-privatecvc2.vercel.app/search/songs?query=";
 function SaavnSearch() {
 event.preventDefault(); // stop page changing to #, which will reload the page

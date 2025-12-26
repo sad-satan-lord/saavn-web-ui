@@ -3,12 +3,15 @@ async function DownloadWithMetadata(btnElement, url, song_id) {
     btnElement.innerText = "Converting...";
     btnElement.disabled = true;
 
+    let songBuffer = null;
+    let song_name = "song";
+
     try {
         if (!results_objects[song_id] || !results_objects[song_id].track) {
             throw new Error("Track data not found");
         }
         const track = results_objects[song_id].track;
-        const song_name = track.name;
+        song_name = track.name;
         const artist_name = track.primaryArtists;
         const album_name = track.album.name;
         // Use high quality image
@@ -18,11 +21,11 @@ async function DownloadWithMetadata(btnElement, url, song_id) {
         // Fetch song data (AAC)
         const songResponse = await fetch(url);
         if (!songResponse.ok) throw new Error('Network response was not ok');
-        const songBuffer = await songResponse.arrayBuffer();
+        songBuffer = await songResponse.arrayBuffer();
 
         // Decode AAC to PCM
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const audioBuffer = await audioContext.decodeAudioData(songBuffer);
+        const audioBuffer = await audioContext.decodeAudioData(songBuffer.slice(0)); // slice to clone if needed, usually not
 
         // Convert PCM to MP3
         const mp3Blob = convertBufferToMp3(audioBuffer);
@@ -63,19 +66,24 @@ async function DownloadWithMetadata(btnElement, url, song_id) {
         // Sanitize filename
         const safe_name = song_name.replace(/[^a-z0-9]/gi, '_');
 
-        // Trigger download
-        const a = document.createElement('a');
-        a.href = taggedSongUrl;
-        a.download = `${safe_name}.mp3`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        triggerDownload(taggedSongUrl, `${safe_name}.mp3`);
         URL.revokeObjectURL(taggedSongUrl);
 
     } catch (error) {
         console.error('Download/Conversion failed:', error);
-        alert('Conversion failed. Falling back to direct download...');
-        window.open(url);
+
+        // Fallback to downloading the original AAC file if available
+        if (songBuffer) {
+            alert('Conversion failed. Downloading original file...');
+            const safe_name = song_name.replace(/[^a-z0-9]/gi, '_');
+            const songBlob = new Blob([songBuffer], { type: 'audio/mp4' });
+            const songUrl = URL.createObjectURL(songBlob);
+            triggerDownload(songUrl, `${safe_name}.m4a`);
+            URL.revokeObjectURL(songUrl);
+        } else {
+            alert('Download failed. Opening direct link...');
+            window.open(url);
+        }
     } finally {
         if (btnElement) {
             btnElement.innerText = originalText;
@@ -84,10 +92,18 @@ async function DownloadWithMetadata(btnElement, url, song_id) {
     }
 }
 
+function triggerDownload(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
 function convertBufferToMp3(audioBuffer) {
     const channels = audioBuffer.numberOfChannels;
     const sampleRate = audioBuffer.sampleRate;
-    // bitrate 128kbps is decent, or 192/320. using 192.
     const kbps = 192;
     const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, kbps);
     const mp3Data = [];
@@ -95,7 +111,6 @@ function convertBufferToMp3(audioBuffer) {
     const left = audioBuffer.getChannelData(0);
     const right = channels > 1 ? audioBuffer.getChannelData(1) : left;
 
-    // Process in chunks of 1152 samples
     const sampleBlockSize = 1152;
     for (let i = 0; i < left.length; i += sampleBlockSize) {
         const leftChunk = left.subarray(i, i + sampleBlockSize);
@@ -110,7 +125,6 @@ function convertBufferToMp3(audioBuffer) {
         const rightInt16 = new Int16Array(rightChunk.length);
 
         for (let j = 0; j < leftChunk.length; j++) {
-            // Convert float to int16
             let val = leftChunk[j];
             val = val < -1 ? -1 : val > 1 ? 1 : val;
             leftInt16[j] = val < 0 ? val * 0x8000 : val * 0x7FFF;
