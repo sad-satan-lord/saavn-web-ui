@@ -22,8 +22,9 @@ async function DownloadSong(btnElement, url, song_id) {
 
         // Generate Filename: Artist - Song.m4a
         // Sanitize to safe characters
-        let safe_artist = artist_name.replace(/[^a-zA-Z0-9 \-,&]/g, '').trim();
-        let safe_song = song_name.replace(/[^a-zA-Z0-9 \-\(\)]/g, '').trim();
+        let safe_artist = artist_name.replace(/[^a-zA-Z0-9 \-\(\)\.,&]/g, '').trim();
+        let safe_song = song_name.replace(/[^a-zA-Z0-9 \-\(\)\.,&]/g, '').trim();
+
         // Fallback if empty
         if (!safe_song) safe_song = "Song";
         if (!safe_artist) safe_artist = "Artist";
