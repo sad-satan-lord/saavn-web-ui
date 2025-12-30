@@ -25,7 +25,7 @@ async function doSaavnSearch(query,NotScroll,page) {
     window.location.hash = query;
     document.querySelector("#saavn-search-box").value = decodeURIComponent(query);
     if(!query) {return 0;}
-results_container.innerHTML = `<span class="loader">Searching</span>`;
+    results_container.innerHTML = `<div class="text-center"><div class="loader"></div><p style="margin-top: 10px;">Searching...</p></div>`;
     query=query+"&limit=40";
     if(page) {
         ;page_index=page_index+1;query=query+"&page="+page_index;
@@ -90,8 +90,8 @@ if (bitrate_i == 4) {quality = 320} else {quality = 160;}
               <p id="${song_id}-n" class="fit-content" style="margin:0px;color:#fff;max-width:100%;">${song_name}</p>
               <p id="${song_id}-a" class="fit-content" style="margin:0px;color:#fff;max-width:100%;">${album_name}<br/></p>
               <p id="${song_id}-ar" class="fit-content" style="margin:0px;color:#fff;max-width:100%;">${song_artist}<br/></p>
-              <button class="btn btn-primary song-btn" type="button" style="margin:0px 2px;" onclick='PlayAudio("${download_url}","${song_id}")'>▶</button>
-              <button class="btn btn-primary song-btn" type="button" style="margin:0px 2px;" onclick='DownloadSong(this, "${download_url}","${song_id}")'>DL</button>
+              <button class="btn btn-primary song-btn" type="button" style="margin:0px 2px;" onclick='PlayAudio("${download_url}","${song_id}")'><i class="fas fa-play"></i></button>
+              <button class="btn btn-primary song-btn" type="button" style="margin:0px 2px;" onclick='DownloadSong(this, "${download_url}","${song_id}")'><i class="fas fa-download"></i></button>
               <p class="float-right fit-content" style="margin:0px;color:#fff;padding-right:10px;padding-top:15px;">${play_time}<br/></p>
           </div>
       </div>

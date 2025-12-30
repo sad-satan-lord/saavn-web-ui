@@ -1,6 +1,6 @@
 async function DownloadSong(btnElement, url, song_id) {
-    const originalText = btnElement.innerText;
-    btnElement.innerText = "Downloading...";
+    const originalContent = btnElement.innerHTML;
+    btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     btnElement.disabled = true;
 
     try {
@@ -21,11 +21,9 @@ async function DownloadSong(btnElement, url, song_id) {
         const songUrl = URL.createObjectURL(songBlob);
 
         // Generate Filename: Artist - Song.m4a
-        // Sanitize to safe characters
         let safe_artist = artist_name.replace(/[^a-zA-Z0-9 \-\(\)\.,&]/g, '').trim();
         let safe_song = song_name.replace(/[^a-zA-Z0-9 \-\(\)\.,&]/g, '').trim();
 
-        // Fallback if empty
         if (!safe_song) safe_song = "Song";
         if (!safe_artist) safe_artist = "Artist";
 
@@ -46,7 +44,7 @@ async function DownloadSong(btnElement, url, song_id) {
         window.open(url);
     } finally {
         if (btnElement) {
-            btnElement.innerText = originalText;
+            btnElement.innerHTML = originalContent;
             btnElement.disabled = false;
         }
     }
