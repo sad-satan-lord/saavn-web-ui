@@ -18,8 +18,38 @@
   margin: 0px;color: rgb(172,248,159);max-width: 100%;
 }
 .song-container {
-  margin-bottom: 20px;border-bottom-right-radius: 30px;border: 2px solid var(--gray);border-bottom-style: solid;border-top-left-radius: 30px;
+  /* Layout */
+  margin-bottom: 20px;
+  padding: 10px;
+
+  /* Glassmorphism */
+  background: rgba(30, 30, 30, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  /* Shape */
+  border-radius: 15px;
 }
+
+.glass-player {
+  z-index: 99;
+  width: 100%;
+  margin: 0px;
+  color: var(--light);
+
+  /* Glassmorphism */
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* Shape */
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
 audio::-webkit-media-controls-panel {
   background-color: #ff9f44af;
 }
@@ -177,4 +207,45 @@ footer {
 }
 .song-btn i {
     font-size: 14px;
+}
+
+/* Flexbox Layout for Song Info to avoid overlap */
+.song-info-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-left: 15px !important;
+  flex: 1;
+  min-width: 0; /* Important for truncating text */
+}
+
+.song-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.song-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.song-title {
+  font-weight: bold;
+  font-size: 1.1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+
+.song-artist, .song-album {
+  font-size: 0.9em;
+  color: #ccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
