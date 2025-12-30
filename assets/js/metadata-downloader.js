@@ -8,8 +8,8 @@ async function DownloadSong(btnElement, url, song_id) {
             throw new Error("Track data not found");
         }
         const track = results_objects[song_id].track;
-        const song_name = track.name;
-        const artist_name = track.primaryArtists;
+        const song_name = track.song;
+        const artist_name = track.primary_artists;
 
         // Fetch song data (AAC) directly
         const songResponse = await fetch(url);
@@ -21,8 +21,16 @@ async function DownloadSong(btnElement, url, song_id) {
         const songUrl = URL.createObjectURL(songBlob);
 
         // Generate Filename: Artist - Song.m4a
-        let safe_artist = artist_name.replace(/[^a-zA-Z0-9 \-\(\)\.,&]/g, '').trim();
-        let safe_song = song_name.replace(/[^a-zA-Z0-9 \-\(\)\.,&]/g, '').trim();
+        // Use a more robust sanitization, but fallback to "Song" if empty
+        let safe_artist = "";
+        if (artist_name) {
+             safe_artist = artist_name.replace(/[^a-zA-Z0-9 \-\(\)\.,&]/g, '').trim();
+        }
+
+        let safe_song = "";
+        if (song_name) {
+            safe_song = song_name.replace(/[^a-zA-Z0-9 \-\(\)\.,&]/g, '').trim();
+        }
 
         if (!safe_song) safe_song = "Song";
         if (!safe_artist) safe_artist = "Artist";
